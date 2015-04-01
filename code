@@ -1,0 +1,115 @@
+from tweepy import Stream
+from tweepy import OAuthHandler
+from tweepy.streaming import StreamListener
+#import datetime
+import time
+import json
+import csv
+
+ckey= 'wIMDpKMm08NfXhsm3o4Y5L6bF'
+csecret= 'enJudtJJEuFQmq7YsPRIYqPBI8JhURz87gNzSjoqKYjXjXG2Yw'
+atoken= '3031372167-5RZU0yDo8GpRYYG5VGR8c54fCSp9HW5ofD3YObm'
+asecret = 'tLdrBYytCKjPjC0GfEoXvFfR7e7S1q4nndA30udq8wytH'
+
+def encode_data(a):
+    if a is None:
+        return a
+    else:
+        return str(a.encode('utf-8'))
+
+def replace_space(a):
+     str = a.replace(" ","%20")
+     return str
+
+class listener(StreamListener):
+    def on_data(self,data):
+        try:
+            #print d
+            f1={'Bicycles','bike accessories','bike adventures','Big Dogs','bicycle gadgets','eBike','electric bike'}
+            f2={'GPS dog collar','GPS dog collar','GPS apps','GPS reviews'}
+            f3={'Life Hacking','Lifehacker Fitness','Lifehacker Fitbit', 'Lifehacker Exercise'}
+            exclusion= {'hot dog'}
+            count1,count2,count3 =0,0,0
+            ex=0
+            data1 = json.loads(('[ '+ str(data) + ' ]'))
+            f=csv.writer(open(  'test4.csv','a'))
+            remove= ['"','!','@','#','$','%','^','&','*','(',')','[',']','{','}',';',':',',','.','/','<','>','?','\\','|','`','~','-','[','=','_','+']
+            for item in data1:
+                text=encode_data(((item['text'])))
+                a=(text).split()
+                for b in a:
+                    d=text.translate(None, ''.join(remove))
+                    #print d
+                    for c in f1:
+                        if c.lower()in d.lower():
+                             count1 = 1;
+
+                    for h in f2:
+                        if h.lower()in d.lower():
+                             count2 = 1;
+
+                    for g in f3:
+                        if g.lower()in d.lower():
+                             count3 = 1;
+
+                    for e in exclusion:
+                        if e.lower()in text:
+                             ex = 1;
+
+                #print a
+                #print count1,count2,count3
+
+                #print ex
+                favorited=(str(item['favorited']))
+                retweeted=(str(item['retweeted']))
+                retweet_count=(str(item['retweet_count']))
+                favorite_count=(str(item['favorite_count']))
+                #geo=encode_data(str(item['geo']))
+                #place=encode_data(str((item['place'])))
+                possibly_sensitive=(str((item['possibly_sensitive'])))
+                created_at=(str(item['created_at']))
+                id=(str(item['id']))
+                source=encode_data(item['source'])
+                in_reply_to_status_id=str(item['in_reply_to_status_id'])
+                in_reply_to_user_id=str(item['in_reply_to_user_id'])
+                in_reply_to_screen_name = encode_data(item['in_reply_to_screen_name'])
+                user_id=(str((item['user']['id'])))
+                user_name=encode_data(((item['user']['name'])))
+                user_location=encode_data(((item['user']['location'])))
+                user_description=encode_data(((item['user']['description'])))
+                user_protected=(str((item['user']['protected'])))
+                user_verified=(str((item['user']['verified'])))
+                user_followers_count=(str((item['user']['followers_count'])))
+                user_friends_count=(str((item['user']['friends_count'])))
+                user_statuses_count=(str((item['user']['statuses_count'])))
+                user_created_at=(str((item['user']['created_at'])))
+                user_lang=encode_data((item['user']['lang']))
+                                #"followers_count":319,"friends_count":435,"listed_count":1,"favourites_count":3231,"statuses_count":4165,"created_at":"Wed Dec 24 15:28:17 +0000
+                if (count1>=1 or count2>=1 or count3>=1) and (ex<1) and favorited.lower()=='true':
+                    print text,favorited,retweeted,retweet_count,favorite_count,possibly_sensitive,created_at,id,source,in_reply_to_status_id,in_reply_to_user_id,in_reply_to_screen_name,user_id,user_name,user_location,user_description,user_protected,user_verified,user_followers_count,user_friends_count,user_statuses_count,user_created_at,user_lang
+
+                    f.writerow([text,favorited,retweeted,retweet_count,favorite_count,possibly_sensitive,created_at,id,source,in_reply_to_status_id,in_reply_to_user_id,in_reply_to_screen_name,user_id,
+                            user_name,user_location,user_description,user_protected,user_verified,user_followers_count,user_friends_count,user_statuses_count,user_created_at
+                            ,user_lang,count1,count2,count3])
+
+
+            #data = json.loads('[ '+ str(data) + ' ]')
+            #f = csv.writer(open("test.csv", "a"))user_name
+            #f.writerow(["text"])
+            #for data in data:
+            #   f.writerow((data["text"].encode('utf-8')))
+            #   f.writerow('\n')
+            return True
+        except BaseException, e:
+            print 'Failed on data',str(e)
+            time.sleep(5)
+
+    def on_error(self, status):
+        print status
+
+auth = OAuthHandler(ckey,csecret)
+auth.set_access_token(atoken,asecret)
+
+
+TwitterStream = Stream(auth,listener())
+TwitterStream.filter(track=["dog","bikes"])
